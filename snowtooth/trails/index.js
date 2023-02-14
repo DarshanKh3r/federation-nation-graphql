@@ -7,7 +7,7 @@ const { gql } = require("graphql-tag");
 const trails = require("./trail-data.json");
 
 const typeDefs = gql`
-  type Trail {
+  type Trail @key(fields: "id"){
     id: ID!
     name: String!
     status: TrailStatus!
@@ -62,6 +62,10 @@ const resolvers = {
       return updatedTrail;
     },
   },
+  Trail: {
+    __resolveReference: reference => 
+      trails.find(trail => trail.id === reference.id)
+  }
 };
 
 async function startApolloServer() {

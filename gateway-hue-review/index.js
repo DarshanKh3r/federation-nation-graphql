@@ -7,14 +7,19 @@ const {
 const {
   startStandaloneServer,
 } = require("@apollo/server/standalone");
+const fetchUserEmail = require("./fetchUserEmail");
 
 class AuthenticatedDataSource extends RemoteGraphQLDataSource {
   async willSendRequest({ request, context }) {
     if (context.authorization) {
-      request.http.headers.set(
-        "authorization",
-        context.authorization
-      );
+      const email = await fetchUserEmail(context.authorization);
+      if(email) {
+        request.http.headers.set("user-email", email);
+        request.http.headers.set(
+          "authorization",
+          context.authorization
+          );
+      }
     }
   }
 }
@@ -36,7 +41,7 @@ const start = async () => {
   });
   const { url } = await startStandaloneServer(server, {
     context: ({ req }) => ({
-      authorization: req.headers.authorization,
+      authorization: req.headers.authorization, // authorize at supergraph(gateway) level
     }),
     listen: { port: process.env.PORT },
   });
